@@ -1,0 +1,55 @@
+<html>
+	<head>
+		<title>Nenjine</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	
+	<body>
+		<h1>Tutorial Nenjine</h1>
+		
+		<div class="navbar">
+			<p> <a href="http://nenjine.com/projects.html">Projects</a>  <a href="http://nenjine.com/games.html">Games</a>  <a href="http://nenjine.com/videos.html">Videos</a>  <a href="http://nenjine.com/contact.html">Contact</a>  <a href="http://nenjine.com/tutorials.html">Tutorials</a>  <a href="http://nenjine.com/index.html">Home</a> </p>
+		</div>
+		
+		<br>
+		
+		<div>
+			<h2>Preamble</h2>
+			
+			<p>Hey all. I was working on a project and put together a script that many people would find helpful, something that will get rid of the black bars without distorting the screen.</p>
+			<p>In this tutorial you will learn:</p>
+			<ul>
+				<li>What the application surface is.</li>
+			</ul>
+		</div>
+		
+		<div>
+			<h2>Start with stretching</h2>
+			<li><a href="https://docs2.yoyogames.com/source/_build/3_scripting/4_gml_reference/drawing/surfaces/the%20application%20surface.html">application_surface</a></li>
+			<li><a href="hhttps://docs2.yoyogames.com/source/_build/3_scripting/4_gml_reference/cameras%20and%20display/display/display_set_gui_size.html">display_set_gui_size()</a></li>
+			<p>To start, we need to change how gamemaker draws the game to the window. When we draw sprites and text, we are actually drawing to a special surface called the <span class="event">application surface</span>. The <span class="event">application surface</span> is created when the game starts, won't be removed from memory while the game is running and by default draws to the window between the <span class="event">draw</span> events and the <span class="event">gui</span> events.</p>
+			
+<pre>surface_resize(application_surface, window_get_width(), window_get_height())
+display_set_gui_size(window_get_width(), window_get_height())
+</pre>
+			
+			<p>The first line stretches the <span class="event">application surface</span> across the window to remove the black bars. The second line does the same, but for the <span class="event">gui</span> surface. It will warp, but we can fix it!</p>
+		</div>
+		
+		<div>
+			<h2>Aspect Ratios</h2>
+			<p>Usually when we talk about the aspect ratio, we are talking about how wide the screen in relation to how tall it is. This is good, but we will need another in order to scale the screen nicely.</p>
+		</div>
+
+		<div>
+			
+			<h2>Postamble</h2>
+			
+			<p class="date">XX XX XX</p>
+			
+		</div>
+		
+		<br>
+	</body>
+</html>[

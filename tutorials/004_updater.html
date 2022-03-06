@@ -1,0 +1,276 @@
+<html>
+	<head>
+	
+		<title>Nenjine</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="style.css">
+		
+	</head>
+	
+	<body>
+	
+		<h1>Tutorial Nenjine</h1>
+		
+		<div class="navbar">
+			<p> <a href="http://nenjine.com/projects.html">Projects</a>  <a href="http://nenjine.com/games.html">Games</a>  <a href="http://nenjine.com/videos.html">Videos</a>  <a href="http://nenjine.com/contact.html">Contact</a>  <a href="http://nenjine.com/tutorials.html">Tutorials</a>  <a href="http://nenjine.com/index.html">Home</a>  <a href="http://nenjine.com/recommended.html">Recommended</a> </p>
+		</div>
+		
+		<br>
+    
+		<div>
+			<h2>Preamble</h2>
+			<p>Hello again. After losing the project files to my old launcher, I decided to start work on a new and imrpoved one. Later I plan on making a tutorial on how to make a full launcher that also updates itself, but to get that working first we need a simple updater. So in this tutorial, I'm going to show you:</p>
+			<ul>
+			
+				<li>How to download files from the internet.</li>
+				<li>How to unpack zip files.</li>
+				<li>How to execute a shell command from inside a game to start another game.</li>
+				
+			</ul>
+			
+			<p>You'll also want to have somewhere you can host some files from, like github or a webserver, that isn't going to have a dynamic address. This is important because if the address changes, then your updater will no longer be able to get files.</p>
+		</div>
+		
+		<div>
+			<h2>The Setup</h2>
+			
+			<li><a href="https://marketplace.yoyogames.com/assets/575/execute-shell?s=885703ce93eacf405db3bd8e1205a099" target="_blank">Execute Shell</a></li>
+			
+			<p>Before we dive into coding, were going to need to install an extension from the market place, as there is no way to launch other programs from inside a game provided by yoyo games normally. The extension that we need to install is the <a href="https://marketplace.yoyogames.com/assets/575/execute-shell?s=885703ce93eacf405db3bd8e1205a099" target="_blank">Execute Shell</a> extension by <span class="event">Samuel Venable</span>.</p>
+			<p>After you follow the link, you'll need to login to <span class="event">Yoyo Games</span> to be able add to your account and download the extension. Once the extension is added to your account, in the IDE on the top menu navigate to <span class="event">Marketplace</span> and then to <span class="event">My Library</span> where youll be able to download and import the extension.</p>
+			
+			<p>Now were going to create and object and setup a few variables in the <span class="event">create</span> event:</p>
+			
+<pre>
+local_version		= -1;
+live_version		= -1;
+file			= "";
+version			= "";
+download_path		= "";
+file_name		= "Gaem";
+</pre>
+			
+			<p>To quickly run through; <span class="event">local_version</span> is the version number of the game stored on the computer, <span class="event">live_version</span> is the version number of the most up to date version, <span class="event">file</span> and <span class="event">version</span> are used to keep track of <span class="func">async</span> callbacks, <span class="event">download_path</span> is used to store where the server tells us to get the game zip from, and <span class="event">file_name</span> is used for file names.</p>
+			
+<pre>
+if (!directory_exists("game_files")) { directory_create("game_files") };
+</pre>
+			
+			<p>The next set we want to do is to create a new folder called "game_files" in the working directory, so that we can keep the game files and the updater files seperate.</p>
+		</div>
+		
+		<div>
+			<h2>Fetching the local version</h2>
+			
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Ffile%20handling%2Fini%20files%2Findex.html" target="blank">.ini files</a></li>
+			
+			<p> Next, we want to find out what our local version is.</p>
+			
+<pre>
+if (file_exists("updaterConfig.ini")) {
+	ini_open("updaterConfig.ini");
+		
+		local_version = ini_read_real(file_name, "version", 0);
+		
+	ini_close();
+} else {
+	ini_open("updaterConfig.ini");
+		
+		ini_write_real(file_name, "version", 0);
+		
+	ini_close();
+};
+</pre>
+			
+			<p>This is a pretty standard piece of code that checks to see if we have created an <span class="event">.ini</span> file to track the version number. If we have, load it and get the version number, and if not, we need to create the file and set the version number to 0.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Getting with HTTP</h2>
+			<p>Lastly before we move out of the <span class="event">create</span> event, we need to request a copy of the <span class="event">version.ini</span> file from the server with the <span class="func">http_get_file</span> function.</p>
+			
+<pre>
+version = http_get_file("http://nenjine.com/version.ini", "version.ini");
+</pre>
+			
+			<p>You'll want to replace the address provided with the address for wherever you are hosting the <span class="event">versions.ini</span> file.</p>
+			<p>The contents of the <span class="event">.ini</span> file should look something like this, but with the address of where you are hosting your game files:</p>
+			
+<pre>
+[Gaem]
+version=1
+path="http://www.nenjine.com/Gaem.zip"
+</pre>
+			
+		</div>
+		
+		<div>
+			<h2>Doing things in step out, of time</h2>
+			<p>Now were going to move to the <span class="event">http async</span> event. Were going to start with a <span class="func">switch</span></p>
+			
+<pre>
+switch (async_load[? "id"]) {
+
+};
+</pre>
+			
+			<p>Because we'll be requesting more than one file from the server and we want to use them differently, we'll need to keep track of what file were recieving when the <span class="event">http async</span> event triggers.</p>
+			<p>When we call the <span class="func">http_get_file</span> function is called, it returns an id for us to use to figure out which file was recieved. We'll use these in our <span class="func">switch</span> statement:</p>
+			
+<pre>
+<span class="oldcode">switch (async_load[? "id"]) {</span>
+
+	case version:
+	
+	break;
+	
+<span class="oldcode">};</span>
+</pre>
+			
+		</div>
+		
+		<div>
+			<h2>Whats new?</h2>
+			<p>When we ask for the <span class="event">version.ini</span> file from the server, the game will call back constantly while the file is being downloaded. Untill the whole file is downloaded we can't access it, so we want to check every call back to see if the file is finished downloading yet:</p>
+			
+<pre><span class="oldcode">case version:</span>
+
+	if (async_load[? "status"] = 0) {
+		
+	};
+	
+<span class="oldcode">break;</span>
+</pre>
+			
+			<p>Once the file has been downloaded, we want to load it and then get the <span class="event">live_version</span> and the <span class="event">download_path</span> so that we can check if our game is up to date or not, and then close it again.</p>
+			
+<pre><span class="oldcode">if (async_load[? "status"] = 0) {</span>
+	
+	ini_open("version.ini");
+	
+		live_version	= ini_read_real(file_name, "version", 0);
+		download_path	= ini_read_string(file_name, "path", "")
+	
+	ini_close();
+	
+<span class="oldcode">};</span>
+</pre>
+			
+		</div>
+		
+		<div>
+			<h2>To update or to run</h2>
+			
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fgame%2Fgame_save_id.html" target="_blank">game_save_id</a></li>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fstrings%2Findex.html" target="_blank">strings</a></li>
+			
+			<p>Now that we know what the local version and live versions are, we can decide whether to update to the latest version, or to just run the version we currently have.</p>
+			
+<pre>
+if (local_version < live_version) {
+	
+	file = http_get_file(download_path, game_save_id + "\\game_files\\" + file_name + ".zip");
+</pre>
+			
+			<p>Here we request the files for the game using the address given to us from the server's <span class="event">version.ini</span> file. We download it to the 'game_files' folder that we created at the start, and save it as a zip file.</p>
+			<p>Notice here the double backslashes. These are important as backslashes are used for inserting special characters via character codes, so we need to use two back slashes to get a single backslash for our file path.</p>
+			
+<pre>
+} else {
+	
+	execute_shell(game_save_id + "\\game_files\\" + file_name + ".exe", false);
+	
+	game_end();
+	
+};
+</pre>
+			
+			<p>Now we want to use a function from the extension that we installed earlier. The <span class="func">execute_shell</span> function will run a given string as a command in the shell. If we give it the full path to the exe of our game it will simply run it. Then, we close the updater.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Downloading the update</h2>
+			
+			<p>When we download the game files, we'll be getting the <span class="event">file</span> id returned, and so we'll add it to our <span class="func">switch</span>.</p>
+			
+<pre>
+<span class="oldcode">switch (async_load[? "id"]) {
+	
+	case version:
+		
+		...
+		
+	break;</span>
+	
+	case file:
+	
+	break;
+	
+<span class="oldcode">};</span>
+</pre>
+			
+			<p>Then the same as before, we want to make sure that we are only trying to work with the downloaded files once they've finished downloading.</p>
+			
+<pre><span class="oldcode">case file:</span>
+	
+	if (async_load[? "status"] = 0) {
+		
+	};
+	
+<span class="oldcode">break;</span>
+</pre>
+			
+		</div>
+		
+		<div>
+			<h2>Unzipping and updating</h2>
+			
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Ffile%20handling%2Fzip_unzip.html" target="_blank">zip_unzip</a></li>
+			
+			<p>Were almost there! All we need to do now, is to update our local version, unzip the files and run them.</p>
+			
+<pre>
+ini_open("updaterConfig.ini");
+		
+	ini_write_real(file_name, "version", live_version);
+		
+ini_close();
+</pre>
+			
+			<p>This is very similar to how we initialy read our local version, but instead were writing the live version to the file, now that we have the live version.</p>
+			<p>To unzip the game files, we get a nice and tidy <span class="func">zip_unzip</span> function to use:</p>
+			
+<pre>
+if (zip_unzip(async_load[? "result"], game_save_id + "\\game_files\\") > 0) {
+	
+};
+</pre>
+			
+			<p>To use <span class="func">zip_unzip</span>, we need to give it the path to the file, which we get from the <span class="event">http async</span> event, and the location that we want to upzip the files to, which will be in the game files folder we created at the start. The function returns 0 or less if it fails to unzip.</p>
+			
+<pre>
+<span class="oldcode">if (zip_unzip(async_load[? "result"], game_save_id + "\\game_files\\") > 0) {</span>
+	
+	execute_shell(game_save_id + "\\game_files\\" + file_name + ".exe", false);
+	game_end();
+
+<span class="oldcode">};</span>
+</pre>
+			
+			<p>Lastly, we use the same code as we did before to run the game and close the updater.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Postamble</h2>
+			
+			<p>I think that having an updater is more valuable and more over looked than good sound design in hobbyist game development. If you want to have multiple games live version data held in the same .ini, you can, you just need to have a different section for each game.</p>
+			<p>As always, if you need a hand with anything found in this tutorial, or need anything clarified, feel free to <a href="http://nenjine.com/contact.html" target="_blank">contact</a> me.</p>
+			<p class="date">13 06 21 05 21</p>
+		</div>
+		
+		<br>
+	</body>
+</html>

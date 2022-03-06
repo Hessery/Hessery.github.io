@@ -1,0 +1,213 @@
+<html>
+	<head>
+	
+		<title>Nenjine</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="style.css">
+		
+	</head>
+	
+	<body>
+	
+		<h1>Tutorial Nenjine</h1>
+		
+		<div class="navbar">
+			<p> <a href="http://nenjine.com/projects.html">Projects</a>  <a href="http://nenjine.com/games.html">Games</a>  <a href="http://nenjine.com/videos.html">Videos</a>  <a href="http://nenjine.com/contact.html">Contact</a>  <a href="http://nenjine.com/tutorials.html">Tutorials</a>  <a href="http://nenjine.com/index.html">Home</a>  <a href="http://nenjine.com/recommended.html">Recommended</a> </p>
+		</div>
+		
+		<br>
+    
+		<div>
+			<h2>Preamble</h2>
+			<p>Hey all. Because Crapple is both obscure and extremely limited, i've decided to write a tutorial on how to figure out the frame a button is pressed and released, as it's a pretty fundamental thing to know. In this tutorial you will learn:</p>
+			<ul>
+				
+				<li>Some basic commands for the Crapple OS console.</li>
+				<li>How memory works in JANK.</li>
+				<li>How to get button presses.</li>
+				<li>How to modify memory with the set function.</li>
+				<li>How to draw text to the screen.</li>
+				<li>How if statements and ln codes work.</li>
+				
+			</ul>
+			
+		</div>
+		
+		<div>
+			<h2>Getting to the editor</h2>
+			<p>Not everyone is used to Ye Olde Console, so I want to give a quick intro into the Crapple OS console and how to get to the code editor. If you have used a console before, you can likely skip this part.</p>
+			<p>After booting up your Crapple for the first time, you'll be taken to a blank screen where you can type onto. This is the console. To load a file to be run, or to create a new blank file you need to use the <span class="func">load</span> command, followed by the name of the file you want to load and then hit enter.</p>
+			<p>To save a file, you do the same thing but with the <span class="func">save</span> command.</p>
+			<p>To run the loaded file, you can simply use the <span class="func">run</span> command. Keep in mind that you cannot run a file that isnt loaded by typing its name after <span class="func">run</span>.</p>
+			<p>The same thing can be said for the <span class="func">edit</span> command, which is used to take you to the code editor.</p>
+		</div>
+		
+		<div>
+			<h2>In Memory Of JANK</h2>
+			<p>When writing in JANK, there are a few things you need to be aware of.</p>
+			<p>Firstly, memory is stored in the start of the program, so that it doesn't change place as you write more code. To begin with, we are going to fill lines <span class="event">1 - 4</span> with a '0'. </p>
+			
+<pre>
+  0 | 
+  1 | 0
+  2 | 0
+  3 | 0
+  4 | 0
+  5 | 
+</pre>
+			
+			<p><span class="event">ln1</span> will be the value of if the button was pressed last frame, <span class="event">ln2</span> will be the value of if the button is being pressed this frame, <span class="event">ln3</span> will be if the button is starting to be pressed this frame, and <span class="event">ln4</span> will be for if this frame the button has been released.</p>
+			<p>As this language is a language of JANK, its best practice to leave the first and last line of the program free of code or memory.</p>
+		</div>
+		
+		<div>
+			<h2>Pressing buttons</h2>
+			<p>Next were going to start writing out actual code.</p>
+
+<pre><span class="oldcode">  0 | 
+  1 | 0
+  2 | 0
+  3 | 0
+  4 | 0
+  5 | 
+</span>  6 | btn X 2
+  7 | 
+</pre>
+
+			<p>With the <span class="func">btn</span> function, you can get the input of a key being pressed and write the value to a line.</p>
+			<p>This code checks to see if the <span class="event">X</span> key is being pressed, and then set the value to <span class="event">ln2</span>, 1 for if the key is being pressed, and 0 if its not being pressed.</p>
+		</div>
+		
+		<div>
+			<h2>Modifying data without btns</h2>
+			<p>At the end of the code we want to set the old key press value to be that of the current key press value, so that we can compare them against eachother.</p>
+			
+<pre><span class="oldcode">  5 | 
+  6 | btn X 2
+  7 | </span>
+  8 | set 1 ln2
+  9 |
+</pre>
+			<p>This is the <span class="func">set</span> function. You can use it to move and set lines to different lines. The first line specifies which line to write to. If you were to use a <span class="event">ln</span> code before the number, you can tell the program to get the value of the line that that line points to, rather than the value of the line specified.</p>
+			<p>The second line specifies what value to set to the destination line. You can either set a value, or you can tell it the value of another line by using the <span class="event">ln</span> code, like we do here.</p>
+		</div>
+		
+		<div>
+			<h2>Drawing text to the screen</h2>
+			
+<pre><span class="oldcode">  5 | 
+  6 | btn X 2
+  7 | </span>
+  8 | drw txt 1 key %2% pressed %3% released %4%
+  9 | 
+ <span class="oldcode">10 | set 1 ln2
+ 11 | </span>
+</pre>
+			<p>To draw our key presses to the screen so we can test that our code is working, we want to use the <span class="func">drw</span> function.</p>
+			<p>We need to tell the <span class="func">drw</span> function three things: 1) That we want to draw text to the screen 2) What line of the screen to draw the text to 3) what we want to draw to the screen.</p>
+			<p>Anything that you write after the line of the screen you wan to write to will be written to the screen. You can get inject data held at lines of the program into the middle of your message using the <span class="event">%</span> symbols on either side of the line number you wish to reference. You can also use <span class="event">ln</span> to tell the program to goto where the line references, rather than the value of the line designated.</p>
+		</div>
+		
+		<div>
+			<h2>Checking if</h2>
+			<p>Comparing two values agaisnt eachother is the same as other programing languages is very similar to other languages. For the first value, you can specify either a line or the line it points to with <span class="event">ln</span>, and with the second value you can specify either a value or the value at a line with <span class="event">ln</span>.</p>
+		
+<pre><span class="oldcode">  5 | 
+  6 | btn X 2
+  7 | </span>
+  8 | if ln2 = 1
+  9 |  // Pressed
+ 10 |  if ln1 = 0
+ 11 |   set 3 1
+ 12 |  end
+ 13 | end
+ 14 | <span class="oldcode">
+ 15 | drw txt 1 key %2% pressed %3% released %4%
+ 16 | 
+ 17 | set 1 ln2
+ 18 | </span>
+</pre>
+			
+			<p>Here we're using two if statements to check if a button has started to be pressed on this frame. We do this by checking if the button is being pressed this frame at <span class="event">ln8</span> and if the button wasnt pressed the last frame, at <span class="event">ln10</span>. Then at <span class="event">ln11</span> we set <span class="event">ln3</span> to true.</p>
+			
+<pre><span class="oldcode">  5 | 
+  6 | btn X 2
+  7 | 
+  8 | if ln2 = 1
+  9 |  // Pressed
+ 10 |  if ln1 = 0
+ 11 |   set 3 1
+ 12 |  end</span>
+ 13 |  // Un Pressed
+ 14 |  if ln1 = 1
+ 15 |   set 3 0
+ 16 |  end<span class="oldcode">
+ 17 | end
+ 18 | 
+ 19 | drw txt 1 key %2% pressed %3% released %4%
+ 20 | 
+ 21 | set 1 ln2
+ 22 | </span>
+</pre>
+			
+			<p>Next we want to add an <span class="func">if</span> for setting it all back if the key was pressed both this frame and last frame.</p>
+			
+		</div>
+		
+		<div>
+			<h2>The release code</h3>
+			<p>The code to check if the button has been released is very similar to the code to check if it has been pressed. Instead you want to check if the button was being pressed last frame, but is not being pressed this frame. We also want to write the result to <span class="event">ln4</span> instead. This code looks like this:</p>
+			
+<pre><span class="oldcode">  5 | 
+  6 | btn X 2
+  7 | 
+  8 | if ln2 = 1
+  9 |  // Pressed
+ 10 |  if ln1 = 0
+ 11 |   set 3 1
+ 12 |  end
+ 13 |  // Un Pressed
+ 14 |  if ln1 = 1
+ 15 |   set 3 0
+ 16 |  end
+ 17 | end
+ 18 | </span>
+ 19 | if ln2 = 0
+ 20 |  // Released
+ 21 |  if ln1 = 1
+ 22 |   set 4 1
+ 23 |  end
+ 24 |  // Un Released
+ 25 |  if ln1 = 0
+ 26 |   set 4 0
+ 27 |  end
+ 28 | end
+ 29 | <span class="oldcode">
+ 30 | drw txt 1 key %2% pressed %3% released %4%
+ 31 | 
+ 32 | set 1 ln2
+ 33 | </span>
+</pre>
+			<p>And that's it!</p>
+		</div>
+		
+		<div>
+			<h2>Postamble</h2>
+			<p>I hope that this helps. There are some improvements that can be made to this code to make it shorted, but I chose not to include them for simplicity's sake. If you wanted something extra to do to see if you fully understand how the code works, why dont you see if you reduce the amount of if statements needed to four?</p>
+			<p>As always, if something isn't entirely clear, and you need clarification, you can contact me <a href="http://nenjine.com/contact.html" target="blank">here</a>.</p>
+			<p class="date">25 04 21</p>
+		</div>
+		
+		<br>
+	</body>
+</html>
+
+
+
+
+
+
+
+
+
+

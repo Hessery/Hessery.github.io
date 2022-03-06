@@ -1,0 +1,139 @@
+<html>
+	<head>
+	
+		<title>Nenjine</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="style.css">
+		
+	</head>
+	
+	<body>
+	
+		<h1>Tutorial Nenjine</h1>
+		
+		<div class="navbar">
+			<p> <a href="http://nenjine.com/projects.html">Projects</a>  <a href="http://nenjine.com/games.html">Games</a>  <a href="http://nenjine.com/videos.html">Videos</a>  <a href="http://nenjine.com/contact.html">Contact</a>  <a href="http://nenjine.com/tutorials.html">Tutorials</a>  <a href="http://nenjine.com/index.html">Home</a>  <a href="http://nenjine.com/recommended.html">Recommended</a> </p>
+		</div>
+		
+		<br>
+    
+		<div>
+			<h2>Preamble</h2>
+			<p>Hey all. After scouring the internet for code on how to find the distance between the center of an elipse and the edge given a specific angle and comming up empty handed, i've decided to make this tutorial so you don't have to nut it out like I did. This project was made in GameMaker Studio:2.3, but will work with anything after GameMaker 1.4. In this tutorial you'll learn:</p>
+			<ul>
+			
+				<li>How GMS:2 draws elipses.</li>
+				<li>How to draw an elipse from scratch.</li>
+				<li>How drawing your own elipse can be useful.</li>
+				
+			</ul>
+			
+		</div>
+		
+		<div>
+			<h2>How they do elipses.</h2>
+			
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fdrawing%2Fforms%2Fdraw_ellipse.html" target="blank">draw_elipse()</a></li>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fdrawing%2Fforms%2Fdraw_ellipse_colour.html" target="blank">draw_elipse_colour()</a></li>
+			
+			<p>Before we dive into writing our own elipse drawer we should probably look at the native functions for drawing elipses so that you don't reinvent the wheel when you don't have to. GMS:2 has two basic elipse drawing functions: <span class="func">draw_elipse</span> and <span class="func">draw_elipse_colour<span>.</p>
+			<p>Both of these work perfectly well as long as you know where and how big you want to draw your elipse, but other than that, they are useless because you can't use the math for anything. This is where knowing how to make your own elipses comes in.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Setting things up.</h2>
+			
+			<p>The way were going to draw our elipse is by first drawing a circle, finding where the edge of it is when given an angle, and then steping through a bunch of them to draw points on the circle.</p>
+			<p>To start, we need to define some variables in the <span class="event">draw</span> event:</p>
+			
+<pre>
+var radius = 20
+var points = 2 * pi / 20
+</pre>
+			
+			<p>The <span class="func">radius</span> variable is the distance between the center of the circle and the edge. The <span class="func">points</span> variable is the angle to incriment every pixel we draw on the circle. To find this we double <span clas="func">pi</span> and then divide it by the amount of points we want to draw.</p>
+
+		</div>
+		
+		<div>
+			<h2>Drawing our circle.</h2>
+			
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fmaths%2Fnumber%20functions%2Fsin.html" target="blank">sin()</a></li>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fmaths%2Fnumber%20functions%2Fcos.html" target="blank">cos()</a></li>
+			
+			<p>We want to next setup a <span class="func">for</span> loop, starting at 0 and going to two times <span class="func">pi</span>, and incrimenting by our points variable every time.</p>
+			
+<pre>
+for (var i = 0; i < 2 * pi; i += points) {
+
+}
+</pre>
+			
+			<p>Now we just need the math to figure out how far away the edge of the circle is, based on the direction.</p>
+		
+<pre>
+<span class="oldcode">for (var i = 0; i < 2 * pi; i += points) {</span>
+	
+	var xx = radius * cos(i);
+	var yy = radius * sin(i);
+	
+	draw_point(x + xx, y + yy)
+	
+<span class="oldcode">}</span>
+</pre>
+			
+			<p>We can figure out the distance by using the <span class="func">sin</span> and <span class="func">cos</span> functions on the direction and timesing by the radius.</p>
+			<p>This code will start drawing relative to the center point of the circle, so we we'll just put it centered on the object for demonstration purposes.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Making it an elipse.</h2>
+			
+			<p>Although this may seem like the most complicated step, it is actually the easiest. To squash our circle we need to times our math by a negative number, and to sretch it we just times it by a positive number. To do it on the vertical axis we do it to the <span class="event">y</span> line of math and for the horizontal axis we do it to the <span class="event">x</span> line of math.</p>
+			
+			<p>We can add this easily by setting up two new variables, <span class="event">x_scale</span> and <span class="event">y_scale</span></p>
+			
+<pre>
+<span class="oldcode">var radius  = 20;
+var points  = 2 * pi / 20;</span>
+var x_scale = 1;
+var y_scale = 0.5;
+
+<span class="oldcode">for (var i = 0; i < 2 * pi; i += points) {
+	
+	var xx = </span>x_scale * <span class="oldcode">radius * cos(i);
+	var yy = </span>y_scale * <span class="oldcode">radius * sin(i);
+	
+	draw_point(x + xx, y + yy)
+	
+}</span>
+</pre>
+		
+			<p>That's it. That's all you need to draw your own elipses.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Postamble.</h2>
+			
+			<p>What I needed this for, was to track what position arms needed to be on an isometric circle in a colaborative project i've been working on. </p>
+			
+<pre>
+var p_d = point_direction(x, y, mouse_x, mouse_y);
+
+attached_x = xprevious +        cos((2 * pi / 360) * p_d);
+attached_y = yprevious + -0.5 * sin((2 * pi / 360) * p_d);
+</pre>
+			
+			<p>In this code you can see how we split up the elipse into 360 diffrent points, and then figured out what one we needed just by timesing it by the direction of our arms.</p>
+			<p>I haven't quite figured out how to do angled elipses as of yet, so if you do know how to add angles to elipses feel free to contant me <a href="http://nenjine.com/contact.html" target="blank">here</a>.</p>
+			
+			<p class="date">02 01 21</p>
+			
+		</div>
+		
+		<br>
+	</body>
+</html>

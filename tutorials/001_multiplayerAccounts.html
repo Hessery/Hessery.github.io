@@ -1,0 +1,604 @@
+<html>
+	<head>
+	
+		<title>Nenjine</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="style.css">
+		
+	</head>
+	
+	<body>
+	
+		<h1>Tutorial Nenjine</h1>
+		
+		<div class="navbar">
+			<p> <a href="http://nenjine.com/projects.html">Projects</a>  <a href="http://nenjine.com/games.html">Games</a>  <a href="http://nenjine.com/videos.html">Videos</a>  <a href="http://nenjine.com/contact.html">Contact</a>  <a href="http://nenjine.com/tutorials.html">Tutorials</a>  <a href="http://nenjine.com/index.html">Home</a>  <a href="http://nenjine.com/recommended.html">Recommended</a> </p>
+		</div>
+		
+		<br>
+		
+		<div class="banner">
+			<h2>IMPORTANT!</h2>
+			<p>People are dumb! They can and will put important details into this completely unsecured accounts database! Just by having it up for people to register an account to, you are taking responsibility for their sensitive infomation that could ruin their lives in the wrong hands! You should look into security for your accounts if you plan on releasing it to the public! You have been warned!</p>
+		</div>
+    
+		<div>
+			<h2>Preamble</h2>
+			<p>Hey all. This is my first tutorial, so please bear with me and any oddities that make it into the final version. This project was made in GameMaker Studio:2.3, but will work with anything after GameMaker 1.4. In this tutorial you'll learn:</p>
+			<ul>
+			
+				<li>How to setup a server and a client that connect to eachother.</li>
+				<li>How to keep track of how many players have connected to the server.</li>
+				<li>How to pack and unpack data from buffers sent as packets across the network.</li>
+				<li>How to add accounts to a data base and keep track of which client is logged in to which account.</li>
+				<li>How to save the accounts database, and then load it back up when the server starts again.</li>
+				
+			</ul>
+			<p>Before we get started, I want to explain some key concepts that you may not have run into yet.</p>
+			<p><span class="event">Servers/Clients</span> - These objects are light-weight objects that gamemaker can create with the <span class="func">network_create_server()</span> and <span class="func">network_connect()</span> that you can't really interact with unless you use specific functions. They handle sending data through sockets from the server to the client and from the client to the server respectivly.</p>
+			<p><span class="event">Sockets</span> - These are hidden light-weight objects that handle sending data around. The server created with <span class="func">network_create_server()</span> makes sockets and handles them for you, where as <span class="func">network_connect()</span> does not.</p>
+			<p>I'll put the relevant usefull links at the top of each section.</p>
+			
+		</div>
+			
+		<div>
+		
+			<h2>Setting up the server</h2>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fnetworking%2Fnetwork_create_server.html" target="blank">network_create_server()</a></li>
+			
+			<p>Understanding what we setup at the start is fundamental to understanding how the whole system will work, so i'll be going into a fair amount of detail in this section to how GameMaker handles servers. When you create your server object, make sure it's marked persistent otherwise you'll loose it if you need to change to another room. Heres what we'll put into the <span class="event">obj_server:create</span> event:</p>
+
+<pre>
+client_count		= 0;
+logged_in_count		= 0;
+</pre>
+			
+			<p>These two are pretty self explanatory; the first tracks the amount of clients connected to the server, where as the second tracks how many of those are actually logged into our system.</p>
+			
+<pre>
+acc_grid		= ds_grid_create(3, 1);
+
+acc_grid[# 0, 0]	= "admin";
+acc_grid[# 1, 0]	= "password";
+acc_grid[# 2, 0]	= -1;
+</pre>
+			
+			<p>This is where we setup the data structure where we will keep the data for all the users. Usually you would store your usernames and passwords in an encrypted format, but for the sake of simplicity of this tutorial, we'll just keep them as plain text.</p>
+			<p>For now, remember that 0 = username, 1 = password and 2 is the socket that is logged into that account.</p>
+			
+<pre>
+server_id = network_create_server(network_socket_tcp, 65525, 256);
+
+if (server_id < 0) { game_end() };
+</pre>
+	
+			<p>This is the first juciy bit. The <span class="func">network_create_server()</span> metioned in the preamble returns the id of the server it creates, unless it fails. If it fails it returns a number less than zero. We want it to use TCP protocol, which tells the server to make sure the client gets everything we send it. Then we give it a port, and a max player count.</p>
+			<p>The second line is where we check that the server, and if it wasn't created, then we exit the game.</p>
+	
+<pre>
+#macro net_acc_register			0
+#macro net_acc_exists			1
+#macro net_acc_login			2
+#macro net_acc_login_success		3
+#macro net_acc_register_success		4
+#macro net_acc_login_fail		5
+</pre>
+			
+			<p>Lastly before we get out of the <span class="event">obj_server:create</span> event, we want to setup some macros. I'll explain how these work later.</p>
+			
+		</div>
+		
+		<div>
+		
+			<h2>Setting up the client</h2>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fnetworking%2Fnetwork_connect.html" target="blank">network_connect()</a></li>
+			
+			<p>Next we'll setup the client. When you create your client object, make sure it's marked persistent otherwise you'll loose it if you need to change to another room. All this goes into the <span class="event">obj_client:create</span> event in the client project.</p>
+			
+<pre>
+network_set_config(network_config_connect_timeout, 2500);
+</pre>
+			
+			<p>This first line changes the length of time that the client sits and waits to connect to a server. I've lowered it a bit from the default since the function isn't asynchronous, and will freeze the game.</p>
+			
+<pre>
+global.socket = network_create_socket(network_socket_tcp);
+</pre>
+			
+			<p>The <span class="func">network_create_socket()</span> creates a socket in which we can use to connect to the server through. We want to tell it to use the same protocol as the server.</p>
+			
+<pre>
+if (network_connect(global.socket, "localhost", 65525) >= 0) {
+	
+	network_set_config(network_config_connect_timeout, 4000);
+	
+} else {
+	
+	game_restart();
+	
+};
+</pre>
+			
+			<p>Here we make the client hidden object, which we give it the id of the socket we just created, plus the ip we want to connect to and the port. For now we'll leave the ip at "localhost" because this point back to the computer were using, but when you launch your game, this will point to the external ip of the machine that is running the server. Lastly is the port, we want this to be the same as the server's port.</p>
+			<p>Same as creating the server hidden object, we get an id back that will be below 0 if it fails. If it doesn't fail, we want to change the timeout back to what it was before, so that our connection wont drop out by accident. Else, if it does fail, just restart the game which will look for the server again.</p>
+		
+<pre>
+#macro net_acc_register			0
+#macro net_acc_exists			1
+#macro net_acc_login			2
+#macro net_acc_login_success		3
+#macro net_acc_register_success		4
+#macro net_acc_login_fail		5
+</pre>
+			
+			<p>This part is the same as in the <span class="event">obj_server:create</span> event. Its important that both of these are the same.</p>
+			<p>It's at this point i'd like to point out that we have a totally functioning server and client that will connect to one another. The only problem is that they don't really do anything with eachother in any meaningful way as far as out accounts system is concerned. Next we'll set up the server to keep track of how many people are connected.</p>
+			
+		</div>
+				
+		<div>
+		
+			<h2>Counting clients</h2>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F2_interface%2F1_editors%2Fevents%2Fasync_events.html" target="blank">Network Async Event</a></li>
+			
+			<p>Whenever our hidden objects talk to eachother, they trigger an event in the other game. We want to write code into the <span class="event">obj_server:async - networking</span> event from here on out.</p>
+			
+<pre>
+var packet_type = async_load[? "type"];
+var packet_id	= async_load[? "id"];
+</pre>
+			
+			<p>When the <span class="event">obj_server:async - networking</span> event is called, it is called with a <span class="func">ds_map</span> created in it, automatically filled with the details of the packet recieved from the socket.</p>
+			
+<pre>
+switch (packet_type) {
+	case network_type_connect:
+	
+		client_count ++
+		
+	break;
+};
+</pre>
+			<p>We want to setup a switch and pass our new packet_type variable into it. The type of packet recieved will always be either <span class="func">network_type_connect</span>, <span class="func">network_type_disconnect</span> or <span class="func">network_type_data</span> unless we configure our connection differently.</p>
+			<p>If we get a new client connecting to the server, for now we just want to count them to our total connected clients variable.</p>
+			
+<pre>
+<span class="oldcode">switch (packet_type) {
+	case network_type_connect:
+	
+		client_count ++
+		
+	break;</span>
+	
+	case network_type_disconnect:
+	
+		client_count --
+		
+	break;
+<span class="oldcode">};</span>
+</pre>
+			
+			<p>This goes in the same switch statement as the previous one. It one does the same thing but for disconnecting, we just want to remove one from our counter instead.</p>
+			<p>From here we can just add a <span class="func">draw_text()</span> function to our <span class="event">obj_server:draw</span> event where we draw <span class="func">client_count</span> to the screen, and we'll be able to see how many clients are connected to the server.</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Requesting to log in</h2>
+			<h3>and packing packets</h3>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F3_gml_overview%2F6_scope.html" target="blank">macros</a></li>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fbuffers%2Fbuffer_create.html" target="blank">buffer_create()</a></li>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fbuffers%2Fbuffer_write.html" target="blank">buffer_write()</a></li>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fbuffers%2Fbuffer_get_size.html" target="blank">buffer_get_size()</a></li>
+			
+			<p>To log into our server, were going to need to get the username and password from the client to the server to log our players into an account. To do this we'll need to send them across the network.</p>
+			<p>First, we need to create a button that we can click on, which we will refer to as <span class="event">obj_login</span>. Inside <span class="event">obj_login:left pressed</span> in our client we want to put this code:</p>
+			
+<pre>
+var user	= get_string("Username:", "admin");
+var pass	= get_string("Password:", "password");
+</pre>
+			
+			<p>We start off getting the username and password from the player using <span class="func">get_string()</span>.</p>
+			
+			<p>When we send data in GameMaker across a network, we need to send it as a buffer. When GameMaker sees a buffer though, it doesn't see the data as intergers or string, but as pure binary. Because of this, we need to pack our buffers in a way that when we unpack them on the other side we know what we put in. The best and easiest way to do this, is to put a code in the front of the buffer to be read first, so that we know what to do with the rest of the packet depending on what that code is.</p>
+			
+<pre>
+var buffer	= buffer_create(1, buffer_grow, 1);
+
+buffer_write(buffer, buffer_u8, net_acc_login);
+</pre>
+			
+			<p>First we create a buffer, to put our data into. This is setup to be one bit big, and then grow as we put data into it so we're not sending anymore data than we need to.</p>
+			<p>Next we write our code into the buffer. We tell it to write a <span class="event">buffer_u8</span> data type into the buffer, which means that its a number between 0 and 255, and tell it we want it to write our <span class="event">net_acc_login</span> macro to the buffer. When we read our buffer on the other side, this is what will let the server know its going to recieve login credentials.</p>
+			
+<pre>
+buffer_write(buffer, buffer_string, user);
+buffer_write(buffer, buffer_string, pass);
+</pre>
+			
+			<p>We then write our username and password into the buffer,</p>
+			
+<pre>
+network_send_packet(global.socket, buffer, buffer_get_size(buffer));
+</pre>
+
+			<p>and then lastly we want to use our socket to send our buffer to the server. We also need to let it know how big the buffer is, so we can just use the <span class="func">buffer_get_size</span> function to do this.</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Answering login requtests</h2>
+			<h3>and unpacking packets</h3>
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Fbuffers%2Fbuffer_read.html" target="blank">buffer_read()</a></li>
+			
+			<p>Now that we have our client getting our credentials from our user and sending them to the server, we can now work on unpacking them in the <span class="event">obj_server:async - networking</span> event.</p>
+			
+<pre>
+<span class="oldcode">switch (packet_type) {
+	...</span>
+	
+	case network_type_data:
+	
+	break;<span class="oldcode">
+};</span>
+</pre>
+			
+			<p>When the server recieves a packet, that is other than a client connecting or disconnecting, the type of packet will be <span class="func">network_type_data</span>. From here we can setup our local variables for unpacking our packets.</p>
+			
+<pre>
+var packet_buffer	= async_load[? "buffer"];
+</pre>
+
+			<p>When the server recieves a data packet, stores the buffer recived in the <span class="func">async_load</span> map. We want to store this in a variable so its quicker to refernce and easier to understand going forwards.</p>
+			
+<pre>
+var packet_contents	= buffer_read(packet_buffer, buffer_u8);
+</pre>
+			
+			<p>The first thing were going to read from our buffer is the code that we put at the start. Remember we wrote it in as a <span class="event">buffer_u8</span>, so we'll need to read it back out as the same data type or we'll have issues.</p>
+			
+<pre>
+switch (packet_contents) {
+	case net_acc_login:
+		
+	break;
+};
+</pre>
+			<p>Now we check to see what data were recieveing in the rest of the buffer. Since the only we can send at the moment is login credentials, then we know any data packet will make it this far.</p>
+			
+<pre>
+var user		= buffer_read(packet_buffer, buffer_string);
+var pass		= buffer_read(packet_buffer, buffer_string);
+var logged_in		= false;
+</pre>
+			
+			<p>Notice that as we read the data from the buffer, we read it out in the order we wrote it in. This is important, otherwise you'll get the wrong data in the weirdest of places.</p>
+			<p>We also setup a variable that tracks if the credentials are right and the client gets logged in or not.</p>
+			
+<pre>
+if (user = "" || pass = "") {
+	
+	var buffer = buffer_create(1, buffer_grow, 1);
+	buffer_write(buffer, buffer_u8, net_acc_login_fail);
+	network_send_packet(packet_id, buffer, buffer_get_size(buffer));
+	
+	exit;
+	
+};
+</pre>
+			
+			<p>We want to add a check in that makes sure that our client isn't trying to log in with an empty string as a username or password. We can just check these together, then send a fail packet to the client and exit out of the rest of the event because we dont want try to log in with these credentials.</p>
+			
+<pre>
+for (var i = 0; i < ds_grid_width(acc_grid); i ++) {
+	if (acc_grid[# 0, i] = user && 
+	    acc_grid[# 1, i] = pass && 
+	    acc_grid[# 2, i] = -1) {
+		
+		acc_grid[# 2, i] = packet_id;
+		
+		logged_in_count ++
+		
+		logged_in = true;
+		
+		break;
+	};
+};
+</pre>
+			
+			<p>This next big chunk of code loops through our accounts data structure and checks to see if the username and password match and that no one is already logged into that account. If it does, it puts the socket id into the grid so no one can log into the account, adds one to the total logged_in_count, makes note that the login was a success and breaks out of the loop.</p>
+			
+<pre>
+if (logged_in) {
+					
+	var buffer = buffer_create(1, buffer_grow, 1);
+	buffer_write(buffer, buffer_u8, net_acc_login_success);
+	buffer_write(buffer, buffer_s8, i);
+	network_send_packet(packet_id, buffer, buffer_get_size(buffer));
+	
+} else {
+	
+	var buffer = buffer_create(1, buffer_grow, 1);
+	buffer_write(buffer, buffer_u8, net_acc_login_fail);
+	network_send_packet(packet_id, buffer, buffer_get_size(buffer));
+	
+};
+</pre>
+			
+			<p>Last, we want to tell the client if they logged in successfully, so they know to goto start loading the rest of the game, or tell them they failed so they can try again.</p>
+			
+			<p>If they do login, we want to also tell them their account number so that we dont need to look up their account number every time they send us a packet.</p>
+			
+			<p>Once thats done we're free to create a buffer, put in the code and send it off to the client who sent us the login request in the first place.</p>
+			
+<pre>
+<span class="oldcode">case network_type_disconnect:
+	
+	client_count --</span>
+	
+	var packet_socket = async_load[? "socket"];
+	
+	for (var i = 0; i < ds_grid_width(acc_grid); i ++) {
+		
+		if (acc_grid[# 2, i] = packet_socket) {
+			
+			logged_in_count --
+			acc_grid[# 2, i] = -1;
+			break;
+			
+		};
+		
+	};
+<span class="oldcode">break;</span>
+</pre>
+			
+			<p>Now we can be logged in, we want to be able to log out when we disconnect. First we need to get the id of the socket to loggout from the accounts data structure then we want to check if the client was logged in, and log them out if they were.</p>
+			
+			<p>Before we head onto registering accounts, we need to setup the client with the ability to get this response and act acordingly.</p>
+			
+<pre>
+var packet_type = async_load[? "type"];
+var packet_id	= async_load[? "id"];
+
+switch (packet_type) {
+	case network_type_data:
+		
+	break;
+};
+</pre>
+			
+			<p>In the <span class="event">obj_client:async - networking</span> event, we want to set it up just like we did the sever, but without the <span class="event">network_type_connect</span> and <span class="event">network_type_disconnect</span> checks, as these only happen in the server.</p>
+			
+<pre>
+var packet_buffer	= async_load[? "buffer"];
+var packet_contents	= buffer_read(packet_buffer, buffer_u8);
+
+switch (packet_contents) {
+	case net_acc_login_success:
+		
+		account = buffer_read(packet_buffer, buffer_s8);
+		
+		show_message_async("Logged in.");
+		
+	break;
+	
+	case net_acc_login_fail:
+		
+		show_message_async("Login failed, wrong username, password or account already logged in.");
+		
+	break;
+};
+</pre>
+			
+			<p>Then, the same as in the server, we want to start sorting the incoming packets based on the code that the server puts in the front of the buffer.</p>
+			<p>You would put other things here like telling the game to goto the next room or reading more data like player names and positions that you could also include in the logged in packet. For now, we'll just be unpacking the account number that we sent.</p>
+			
+		</div>
+		
+		<div class="banner">
+		
+			<p>If you're already comfortable with what we've done so far, why not save your projects and see if you can figure this one out on your own? You have all the tools you need to setup registering accounts already.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Registering requests</h2>
+			
+			<p>From here we'll tackle requests to make a new account on the server. This is very similar to logging in, but instead of checking to see if the account is there and logged off, were checking to see if there isnt an account with that username.</p>
+			
+<pre>
+<span class="oldcode">var user	= get_string("Username:", "admin");
+var pass	= get_string("Password:", "password");
+var buffer	= buffer_create(1, buffer_grow, 1);
+
+buffer_write(buffer, buffer_u8, </span>net_acc_register<span class="oldcode">);
+buffer_write(buffer, buffer_string, user);
+buffer_write(buffer, buffer_string, pass);
+
+network_send_packet(global.socket, buffer, buffer_get_size(buffer));
+</span></pre>
+			
+			<p>For the client, we want to make a new button. Lets call it <span class="event">obj_register</span> and in the <span class="event">left pressed</span> event, we want to write the above code.</p>
+			<p>I've highlighted the only thing we need to change from the <span class="event">obj_login:left pressed</span> code, which is just to make the code at the start of the buffer the registering code rather than the logging in code.</p>
+			
+<pre><span class="oldcode">
+switch (packet_contents) {
+	case net_acc_login:
+		
+		...
+		
+	break;</span>
+	
+	case net_acc_register:
+				
+		var user	= buffer_read(packet_buffer, buffer_string);
+		var pass	= buffer_read(packet_buffer, buffer_string);
+		var exists	= false;
+		
+	break;
+<span class="oldcode">};</span>	
+</pre>
+			
+			<p>In a new case in the <span class="event">obj_server:sync - networking</span> event, we want to setup the same unpacking code as we did in the logging in section. The only diffrence is the <span class="event">logged_in</span> variable is named <span class="event">exists</span> becuase we're checking if the account were trying to make exists or not instead.</p>
+			
+<pre>
+for (var i = 0; i <= ds_grid_width(acc_grid); i += 1) {
+	if (user = acc_grid[# 0, i]) { 
+		
+		exists = true;
+		break;
+	
+	};
+};
+</pre>
+			
+			<p>After that, we need to use the username that we just recived to check if the user the client is trying to create already exists or not. If it finds one, we make note of it and break from the loop.</p>
+			
+<pre>
+if (exists = true) {
+	
+	var buffer = buffer_create(1, buffer_grow, 1);
+	buffer_write(buffer, buffer_u8, net_acc_exists);
+	network_send_packet(packet_id, buffer, buffer_get_size(buffer));
+	
+} else {
+</pre>
+			
+			<p>If the account already exsits, then we want to let the client know.</p>
+			
+<pre>
+	var width	= ds_grid_width(acc_grid);
+	var height	= ds_grid_height(acc_grid);
+	
+	ds_grid_resize(acc_grid, width, height + 1);
+	
+	acc_grid[# 0, height] = user;
+	acc_grid[# 1, height] = pass;
+	acc_grid[# 2, height] = -1;
+</pre>
+			
+			<p>If the account doesn't exist, then we want to make the accounts data structure bigger, and then add the new account to the bottom of the grid, and make sure that no one is logged in to the account.</p>
+			
+<pre>
+	var buffer = buffer_create(1, buffer_grow, 1);
+	buffer_write(buffer, buffer_u8, net_acc_register_success);
+	network_send_packet(packet_id, buffer, buffer_get_size(buffer));
+	
+};
+</pre>
+
+			<p>Last, we want to tell the client that the account was registered</p>
+			
+<pre>
+<span class="oldcode">switch (packet_contents) {
+
+	...</span>
+	
+	case net_acc_exists:
+					
+		show_message_async("Account already exists.");
+					
+	break;
+
+	case net_acc_register_success:
+		
+		show_message_async("Registered.");
+		
+	break;
+<span class="oldcode">};</span>
+</pre>
+			
+			<p>Going back to the <span class="event">obj_client:async - networking</span> event, we want to add our two new possible types of packets that we can recieve from the server.</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Saving the accounts</h2>
+			
+			<li><a href="https://docs2.yoyogames.com/index.html?page=source%2F_build%2F3_scripting%2F4_gml_reference%2Ffile%20handling%2Ffiles%2Findex.html" target="blank">text file functions</a></li>
+			
+			<p>At the moment when we close down our server, we lose all the data from the data structure. To fix this we need to save our data. A good time to do this is after we register a new account, although you'll want to do it more regularly than that.</p>
+			
+			<p>In the <span class="event">obj_server:async - networking</span> event after we tell the client that we successfuly registered them an account, we can put this code in to save all of our account data:</p>
+			
+<pre>
+var acc_string = ds_grid_write(acc_grid);
+</pre>
+
+			<p>To start we want to turn our accounts data structure into a string, so that we can put it in a .txt file without any hassle.</p>
+
+<pre>
+file_delete(working_directory + "accounts.txt");
+</pre>
+			
+			<p>Then we clear all our old account data we have saved. The easiest way to do this is to just delete the whole file.</p>
+			
+<pre>
+acc_file = file_text_open_write(working_directory + "accounts.txt");
+</pre>	
+
+			<p>Next create a new accounts file in the working directory. When we try to open a file that doesn't exsits, it will create a new file. This is saved in the XX.</p>
+			
+<pre>
+file_text_write_string(acc_file, acc_string);
+file_text_close(acc_file);
+</pre>
+		
+		<p>Lastly we want to write our account string to the file and close it to save it to the hard drive.</p>
+		
+		<p>We also want to load our data into our server when it turns on, so we'll be editing the <span class="event">obj_server:create</span> event.</p>
+		
+<pre>
+acc_file		 = file_text_open_read(working_directory + "accounts.txt");
+
+if (acc_file = -1) {
+
+	acc_grid[# 0, 0] = "admin";
+	acc_grid[# 1, 0] = "password";
+	acc_grid[# 2, 0] = -1;
+
+} else {
+	
+	var acc_string = file_text_read_string(acc_file)
+	ds_grid_read(acc_grid, acc_string);
+	
+	for (var i = 0; i < ds_grid_height(acc_grid); i ++) {
+		
+		acc_grid[# 2, i] = -1;
+		
+	};
+	
+};
+</pre>	
+		
+		<p>We want to replace our exsisting code for adding our admin account to the data structure with this new code.</p>
+		
+		<p>It starts by trying to open the accounts text file. Then it checks to see if it opened or not. If it didn't open, then we add the admin account. If it does open, then we get the acc_string from it and convert it back into the acc_grid data structure. If the server shutdown unexpectedly all the users will still be logged in acording to our grid, so we'll just log them all out using a for loop.</p>
+		
+		<p>And you're done!</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Postamble</h2>
+			<p>Like I said in the preamble, this is my first tutorial, so it may be unreadable, wrong or broken. Sorry about that if it's the case. I had fun writing it though and want to write more niche tutorials that no one else is covering in the future.</p>
+			<p>As you build the rest of your game on top of this, there are a few additions that will help you alot that I highly suggest looking into.</p>
+			<ul>
+				<li>Keep a ds_list of all the sockets logged in. When you need to send something to all your players, you dont want to have to look through all of the accounts ever made.</li>
+				<li>Don't send data across the network, or store it unencrypted. People will reuse important login details on your server, when other people hack in, it will be your fault their details were stolen.</li>
+			</ul>
+			
+			<p>If you have anthing you want to tell me concerning this tutorial, you can contact me <a href="http://nenjine.com/contact.html" target="_blank">here</a>.</p>
+			
+			<p class="date">28 10 20 17 06 21</p>
+			
+		</div>
+    
+		<br>
+	</body>
+</html>

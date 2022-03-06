@@ -1,0 +1,225 @@
+<html>
+	<head>
+		<title>Nenjine</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
+	
+	<body>
+		<h1>Tutorial Nenjine</h1>
+		
+		<div class="navbar">
+			<p> <a href="http://nenjine.com/projects.html">Projects</a>  <a href="http://nenjine.com/games.html">Games</a>  <a href="http://nenjine.com/videos.html">Videos</a>  <a href="http://nenjine.com/contact.html">Contact</a>  <a href="http://nenjine.com/tutorials.html">Tutorials</a>  <a href="http://nenjine.com/index.html">Home</a> </p>
+		</div>
+		
+		<br>
+		
+		<div>
+			<h2>Preamble</h2>
+			<p>Hey all. Recently after picking up the Html5 export for Gamemaker Studio 2, I found myself running into a lot of issues trying to develop for the platform. I want to compile a list of things that I've found different when working with the html5 export, to hopefully save you time trying to trouble shoot your game.</p>
+			<p>Because support has been dropped for the old documentation, not all things being added to the new documention are in the old documentation, so I'll be linking all references to the new documenation.</p>
+		</div>
+		
+		<br>
+		
+		<div>
+			<h2>Networking</h2>
+		</div>
+		
+		<div>
+			<h2>Mandatory web socket sockets</h2>
+			
+			<li><a href="https://manual.yoyogames.com/#t=GameMaker_Language%2FGML_Reference%2FNetworking%2Fnetwork_create_socket.htm" target="_blank">network_create_socket()</a></li>
+			<li><a href="https://manual.yoyogames.com/#t=GameMaker_Language%2FGML_Reference%2FNetworking%2Fnetwork_connect_async.htm" target="_blank">network_connect_async()</a></li>
+			<li><a href="https://manual.yoyogames.com/#t=GameMaker_Language%2FGML_Reference%2FNetworking%2Fnetwork_resolve.htm" target="_blank">network_resolve()</a></li>
+			
+			<p>Coding a multiplayer game for html5 is very similar to working with windows, but there is almost no infomation in the documentation about what the differences are.</p>
+			
+			<p>Firstly, the limitations. You cannot run a server in html5, and you cannot connect to servers unless you are both using <span class="event">network_socket_ws</span> type sockets. The documentation says that the use of <span class="event">network_socket_ws</span> is only for projects running on html5, but it seems to be that its the only type of socket web export projects can use, and that other types of exports and use it just fine.</p>
+			
+			<p>Since youre working with html and probably have a webserver and domain name all setup already, you can use <span class="func">network_resolve</span> to get the ip address for your website from your website's url, rather than needing to put the public ip that is likely be dynamic and subject to change.</p>
+			
+		</div>
+		
+		<div>
+			<h2>Making a new type of connection</h2>
+			
+			<li><a href="https://manual.yoyogames.com/#t=The_Asset_Editors%2FObject_Properties%2FAsync_Events%2FNetworking.htm" type="_blank">Networking Async Event</a></li>
+			
+			<p>The next thing you need to keep in mind is that when connecting to the server, unless you are using <span class="func">network_connect_async</span> the connection will fail. This function is just like the regular <span class="func">network_connect</span> one, but won't pause the game to connect. This also has the caveat that along with the regular triggers for the <span class="event">async - networking</span> event, the event will also be triggered when the client connects and disconnects with the server.</p>
+			
+			<p>Becauase the client will trigger <span class="event">network_type_connect</span> and <span class="event">network_type_disconnect</span> events, you'll need to make sure the before you run all the usual packet recieving code you check to see that the type of packet recieved was a <span class="event">network_type_data</span> type, or the game will crash imediatly after it sucessfully connects to the server.</p>
+		</div>
+		
+		<div>
+			<h2>Buffer strings are broken</h2>
+			
+			<li><a href="https://manual.yoyogames.com/index.htm?#rhsearch=buffer&t=GameMaker_Language%2FGML_Reference%2FBuffers%2Fbuffer_read.htm" target="_blank">buffer_read()</a></li>
+			
+			<p>When you recieve a packet and want to read a string out of it, you cannot use <span class="func">buffer_read</span> function. Trying to do so will result in the buffer read head getting moved inccorectly and an <span class="event">undefined</span> value being returned. Luckily there is a work around:</p>
+			
+<pre>
+function buffer_read_string(_buffer){
+	
+    var _str = "";
+    var byte;
+	
+    while (true) {
+		
+        byte = buffer_read(_buffer ,buffer_u8);
+		
+        if (byte = 0) { break };
+		
+        _str = _str + ansi_char(byte);
+		
+    };
+	
+    return _str;
+	
+};
+</pre>
+		
+			<p>This script will read and return a string from the given buffer, and move the buffer header along the correct way.</p>
+			
+		</div>
+		
+		<br>
+		
+		<div>
+			
+			<h2>General Considerations</h2>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Data Structures</h2>
+			
+			<li><a href="https://manual.yoyogames.com/#t=GameMaker_Language%2FGML_Reference%2FData_Structures%2FData_Structures.htm" target="_blank">Data Structures</a></li>
+			
+			<p>Because of how structured java script is compared to GML, when working with data structures you will need to be extra carefull not to write outside of the data structure, otherwise the game will crash and will show a black screen.</p>
+			
+			<p>You can check if this is happening without needing to compile the game as HTML, as the output window in the IDE will notify you of when this happens, as well as where in the grid, and the size of the grid being read or writen from.</p>
+			
+		</div>
+
+		<div>
+			<h2>Arrays and Accessors</h2>
+
+			<li><a href="https://manual.yoyogames.com/index.htm#t=GameMaker_Language%2FGML_Overview%2FAccessors.htm" target="_blank">Accessors</a></li>
+
+			<p>If you are using the shorthand way to access arrays, instead of a function it's a good idea to use the array accessor <span class="event">@</span>. Although gamemaker usually reads it correctly, sometimes with the web export it will fail to figure out what sort of data structure you're trying to access, and will crash the game instead.</p>
+		</div>
+		
+		<div>
+			
+			<h2>Surfaces</h2>
+			
+			<li><a href="https://manual.yoyogames.com/#t=GameMaker_Language%2FGML_Reference%2FDrawing%2FSurfaces%2Fsurface_create.htm" target="_blank">surface_create()</a></li>
+			
+			<p>As noted in the documentation, its essential that when you create surfaces for the web export that the surface size is a power of 2. This isn't as important on the desktop export, but will make your game more compatible and cause less obscure issues if they ever arise.</p>
+			
+		</div>
+		
+		<br>
+		
+		<div>
+			
+			<h2>HTML</h2>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Multiple Games On One Page</h2>
+			
+			<p>You can run multiple games on one page, but it requires you to load the game in through an iframe, and have a js scipt that allows switching the focus between the iframes.</p>
+			<p>It is requiured for the iframe to be focused if you want to be able to use the keyboard in your game this way.</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Center the game on the page</h2>
+			
+			<p>There are two ways to center the game on the page. One way is to do it in the <span class="event">Game Options</span> for <span class="event">HTML5</span>. Under <span class="event">Graphics</span> there is a check box.</p>
+			
+			<p>The other way is to do it manually in the <span class="event">html</span> or <span class="event">css</span> file when you build your page. In the html it will look like this:</p>
+			
+<pre>
+&lt;canvas id="canvas" width="600" height="400" display="block" margin-left="auto" margin-right="auto"&gt;
+	&lt;p>Your browser doesn't support HTML5 canvas.&lt;/p&gt;
+&lt;/canvas&gt;
+</pre>
+			
+			<p>Naturally, you would want to change the width and height to the width and height of the window you game uses.</p>
+			
+		</div>
+		
+		<br>
+		
+		<div>
+			
+			<h2>Optimisations</h2>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Web GL</h2>
+			
+			<p>If your game is slowing down, it may have something to do with your browser not using Web GL. You can make Web Gl required for your game to run, in <span class="event">Game Options</span> under <span class="event">HTML5</span> and <span class="event">Graphics</span>.</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Creating and destorying instances</h2>
+			
+			<li><a href="https://manual.yoyogames.com/index.htm?#rhsearch=list&t=GameMaker_Language%2FGML_Reference%2FData_Structures%2FDS_Lists%2FDS_Lists.htm" target="_blank">DS Lists</a></li>
+			<li><a href="https://manual.yoyogames.com/index.htm?#t=GameMaker_Language%2FGML_Reference%2FData_Structures%2FDS_Grids%2FDS_Grids.htm" target="_blank">DS Grids</a></li>
+			<li><a href="https://manual.yoyogames.com/index.htm?#rhsearch=activate&t=GameMaker_Language%2FGML_Reference%2FAsset_Management%2FInstances%2FDeactivating_Instances%2Finstance_activate_object.htm" target="_blank">instance_activate_object()</a></li>
+			<li><a href="https://manual.yoyogames.com/index.htm?#rhsearch=activate&t=GameMaker_Language%2FGML_Reference%2FAsset_Management%2FInstances%2FDeactivating_Instances%2Finstance_deactivate_object.htm" target="_blank">instance_deactivate_object()</a></li>
+			
+			<p>One slow down I've seen on the fourms is that if instances are frequently created and destroyed, then after a while the framerate will begin to tank. It seems that as resources are used and discarded it will generate garbage memory that the browser will have to deal with, which will make the frame rate drop.</p>
+			<p>One way to get around this is to collect your instances you intend to destory into a list, and make sure that they are all deactivated. Then when you want to create a new instance of that type, you can pull an instance from the list to reactivate rather than create a new one from scratch.</p>
+			<p>Another solution would be to take any lightweight instances, such as ones for buttons, tiles and walls, and to replace them with one control instance that would use a <span class="event">ds_grid</span> to simulate them. This results in the game resizing a <span class="event">ds_grid</span>, rather than creating and destorying instances, thus reducing the load on resources.</p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Particles</h2>
+			
+			<p>If you don't require the use of particles in your game, you can improve load time and file size of your game by not including built-in particle images in your export. To disable the inclusion of these images, in the Game Options, under HTML and Graphics, uncheck the box that says <span class="event">Use built-in particles</span></p>
+			
+		</div>
+		
+		<div>
+			
+			<h2>Unresponsive Game Fix</h2>
+			
+			<p>One issue i personally ran into was that when running the game from the website, the game would be unresponsive and only detect clicks and keypresses some of the time. This is the result of the canvas element not being properly created, specifically, you have not included this:</p>
+			
+<pre>image-rendering: optimizeSpeed;</pre>
+			
+			<p>In either the css file for canvas elements, or in a style tag for the canvas in the html file.</p>
+			
+		</div>
+		
+		<br>
+		
+		<div>
+			
+			<h2>Postamble</h2>
+			
+			<p>Naturally, this isn't everthing that could go wrong when working on a game for the web export, but this is a good place to get started when looking for solutions for issues that you may come across.</p>
+			<p>If you do come across anything not in this list, or have noticed that it needs updating, please contact me <a href="http://nenjine.com/contact.html" target="_blank">here</a>, so that this list can become more useful in the future.</p>
+			
+			<p class="date">14 19 06 21</p>
+			
+		</div>
+		
+		<br>
+	</body>
+</html>[
