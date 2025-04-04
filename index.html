@@ -1,5 +1,150 @@
-<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Nenjine</title>
+		<link rel="stylesheet" type="text/css" href="./Nenjine_files/style.css">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <script src="./Nenjine_files/jquery.js.download"></script>
+	</head>
+	
+	<body>
+		<center><h1>Welcome to the Nenjine!</h1></center>
+		<div class="header">
+			<p>Welcome to my website. This website is currently being run on a <a href="http://verysimplewebserver.com/" target="_blank">Very Simple Web Server</a>.</p>
+			<p>If you're looking for my portfolio you can find it <a href="https://hessery.github.io/Portfolio/">here</a>.</p>
+			<p class="date">-Hessery</p>
+		</div>
+	
+		<div class="navbar">
+			<p> <a href="https://hessery.github.io//projects.html">Projects</a>  <a href="https://hessery.github.io//games.html">Games</a>  <a href="https://hessery.github.io//videos.html">Videos</a>  <a href="https://hessery.github.io//contact.html">Contact</a>  <a href="https://hessery.github.io//tutorials.html">Tutorials</a>  <a href="https://hessery.github.io//recommended.html">Recommended</a> </p>
+		</div>
+		
+		<br>
+		
+		<div>
+			<a name="treadmill"></a>
+			<h2>Invisible Treadmills</h2>
+			<p>Infinite scrolling websites and apps are like treadmills. Treadmills can be used for benefit when a clear goal is in mind (grinding grain, getting fit, etc) but they have also been used as tourture devices for convicts and criminals. </p>
+			<p>If we don't have a specific goal or purpose for engaging in <span class="func">any</span> activity without a clear end, then we should not partake in the tourture.</p>
+			
+			<p><b>Limited,   productive:</b>   Hobby</p>
+			<p><b>Limited,   unproductive:</b> Recreation</p>
+			<p><b>Unlimited, productive:</b>   Work</p>
+			<p><b>Unlimited, unproductive:</b> Tourture</p>
+			
+		</div>
+		
+		<div>
+			<a name="preBuild"></a>
+			<h2>Running .bat files during the Gamemaker Build process</h2>
+			<p>Recently I've been working on a procedual level generator for Gamemaker that uses gamemaker rooms as templates for placing room segments into the level. The system works really well, except for one small bump in the road: every time you want to test your new rooms you need to copy the rooms folder in your project to the datafiles folder.</p>
+			<p>My first atempt was to use <span class="func">gml_pragma</span> and steal Yellow After Life's recursive folder copy script to move them around, but <span class="func">gml_pragma</span> runs after the compiler loads all the files into memory, and so the changes wouldn't go into effect untill the next to you ran your code.</p>
+			<p>The next thought was to change the file path where the game would look for the files. During development the path could be <span class="event">"D:\Git\MetroGnome\rooms"</span>, and then be just set to <span class="event">"\rooms"</span> before the game is compiled into an executable. This worked but wasn't as simple as it should have been</p>
+			<p>Finally i found out about a series of special names you could call .bat files to have them run during crucial moments when you would not usually be able to take any action. One such name is <span class="event">pre_build_step.bat</span>, which allows you to run code before the build step is taken. Before Gamemaker loads the project files into memory for building.</p>
+			<p>The command required to move the files can be found below. It's a simple <span class="func">xcopy</span> command using <span class="event">%~dp0</span> to get the path to the directory that the .bat file is being run in</p>
+			<pre>xcopy "%~dp0\rooms" "%~dp0datafiles\rooms" /y /s /i</pre>
+			<p class="date">17 25 01 22</p>
+		</div>
+
+		<div>
+			<a name="workingWithHTML"></a>
+			<h2>Working With HTML</h2>
+			<p>I recently picked up the web export for Gamemaker Studio 2 on sale, as did a few people I know. I was unsure of how easy it would be to work with as I'd heard that it was broken or buggy and that many people couldn't get it to work on websites at all.</p>
+			<p>What I found instead is that it works really well, but needs to be handled differently in some situations, most of which aren't well documented or explained in the documentation. So I've created a small tutorial to run someone new to the web export through, to get them up to speed and developing for HTML as quickly as possible.</p>
+			<p>You can find that tutorial <a href="https://hessery.github.io//tutorials/005_workingWithHtml.html">here</a>.</p>
+			<p class="date">14 06 21</p>
+		</div>
+
+		<div>
+      <a name="CrappleOS"></a>
+			<h2>Crapple OS</h2>
+			<p>The last few days i've been making a computer from scratch in GMS:2. You can download it over on my <a href="https://hessery.github.io//projects.html">projects</a> page.</p>
+			<p>Crapple OS is fully capable of saving, loading, running and editing file. For writing programs it uses my very own custom language called JANK, which you can find documentation included in the download .zip.</p>
+			<p>A a quirk to be careful of is that there is some weirdness to writing code in the very first and last line, and so its standard practive to leave these blank.</p>
+			<p class="date">25 04 21</p>
+		</div>
+		
+		<div>
+      <a name="GM48_38"></a>
+			<h2>The 38th Gm(48)</h2>
+			<p>For this game jam, our team increased by one Kyle (Standard Imperial). This time we created a Tron disk wars style game where you gain points by lowering a chess style timer by keeping the disk on your opponent's side of the map.</p>
+			<p>You can find the game <a href="https://gm48.net/game/1855/disc-dash" target="blank">here</a>.</p>
+			<p class="date">25 04 21</p>
+		</div>
+
+		<div>
+      <a name="GM48_37"></a>
+			<h2>The 37th GM(48)</h2>
+			<p><span class="event">Br👁an</span> and I once again participated in GM(48). This time we created a Luftaurser clone that involved plane jacking and giant diseased love intrests.</p>
+			<p>You can find the game <a href="https://gm48.net/g/1822" target="blank">here</a> and a post-mortem that <span class="event">Br👁an</span> wrote <a href="https://www.reddit.com/r/gamemaker/comments/l08fae/did_my_second_game_jam_this_weekend_source_more/" target="blank">here</a>.</p>
+			<p class="date">22 01 21</p>
+		</div>
+
+		<div>
+		  <a name="jackBlackMinecraft"></a>
+			<h2>Jack Black Narrates Minecraft</h2>
+			<p>Yep, the title says it all.</p>
+			<p>Jack Black narrated a minecraft book written by the guy that wrote World War Z. They released it for free for a bit, and I keep my free copy <a href="https://hessery.github.io//minecraft-black.m4a">here</a>.</p>
+			<p>Go support the madlads on Amazon or something, i dunno.</p>
+			<p class="date">09 12 20 17 01 22</p>
+		
+		</div>
+		
+		<div>
+			<a name="timeScheme"></a>
+			<h2>My Crazy Time Scheme</h2>
+			<p>Each post on this website has a set of numbers along the bottom, ranging from three to six sets of two. These numbers indicate when the post was originally posted and when it was last updated.</p>
+			<p>These dates are set out in a <span class="func">DD MM YY</span> for posts that have not been edited. For posts that have been edited within the same month the revision day is placed between the post day and the post month with a <span class="func">DD</span> <span class="event">DD</span> <span class="func">MM YY</span> format. If revised in a diffrent month, the original post month is moved before the revision day and the revision month is put between the revision day and the year in a <span class="func">DD MM</span> <span class="event">DD MM</span> <span class="func">YY</span> format. If the revision is during a diffrent year, the original post date is put before the revision date  in this format <span class="func">DD MM YY</span> <span class="event">DD MM YY</span>.</p>
+			<p>This probably doesn't make much sense, not that it matters as most people dont need to know when a post was revised, and if they do need to know, they usually need only to know if the post has been revised or not.</p>
+			
+			<p class="date">05 11 20</p>
+			
+		</div>
+		
+		<div>
+      <a name="GM48_36"></a>
+			<h2>The 36th GM(48)</h2>
+			<p><span class="event">Br👁an</span> and I participated in the 36th GM(48) together and placed 20th, creating a base-building tower-defence game where you defend agaisnt waves of mutant cows and chickens.</p>
+			<p>You can find the game <a href="https://gm48.net/game/1704/not-spacious-oasis" target="blank">here</a>, a gameplay video <a href="https://youtu.be/zI7q9ogHThg" target="blank">here</a> and a post-mortem that we wrote <a href="https://www.reddit.com/r/gamemaker/comments/jgmih6/i_did_my_first_game_jam_with_gm_and_lived_heres/" target="blank">here</a>.</p>
+			
+			<p class="date">24 10 05 11 20</p>
+		</div>
+		
+		<div>
+      <a name="paperJam"></a>
+			<h2>Paper Jam</h2>
+			<p>The other day in the office while having technical difficulties with the resident printer, I had a thought, Paper Jam. One could make Paper Jam, not as in a printer malfunction, but as in a spread made of paper.</p>
+			<p>A while ago, while watching a <a href="https://www.youtube.com/watch?v=v-mWK_kcZMs" target="_blank">video</a> about making alcohol from toilet paper, I learnt that paper is mostly made of cellulose. Cellulose in turn is just many molecules of glucose connected together. This implies then that jam, usually being made of about 50% sugar, could then be made out of paper.</p>
+			<p>Similar to the above mentioned video, the cellulose would need to be broken down into glucose using a base solution and cellulase. Then pectin could be added to the mixture to turn the mixture into a jelly. Paper isn't made to be eaten, but most sources agree that it is mostly safe to eat. In theory, no other steps would need to be taken if all ingredients used were food grade and safe for consumption.</p>
+			<p>In the end, this is all theory and though it's fairly simple i'm no chemist. One day though, I would like to try to make paper jam without using a printer.</p>
+			
+			<p class="date">21 07 20</p>
+		</div>
+		
+		<br>
+	
+
+</body><style id="stylus-1" type="text/css" class="stylus">#hyperbaseContainer {
+    filter: invert(100%);
+}
+
+#hyperbaseContainer img,
+#hyperbaseContainer button { /* revert images back to normal */
+    filter: invert(100%);
+}
+
+#hyperbaseContainer .white {
+    filter: invert(100%);
+    background: #3e3e3e;
+}
+
+#hyperbaseContainer .pill,
+#hyperbaseContainer .colorOption { /* revert back to normal */
+/*     filter: invert(100%); */
+}</style></html>
+
+<!-- <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Redirecting to the Nenjine!</title>
 <meta http-equiv="refresh" content="0; URL=http://192.168.0.16/">
 <link rel="canonical" href="http://192.168.0.16/">
+--?
